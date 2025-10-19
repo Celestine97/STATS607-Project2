@@ -2,7 +2,7 @@ import numpy as np
 from tqdm import tqdm
 from data_generation import generate_data
 from statistical_methods import compute_pvalues, bonferroni_method, hochberg_method, benjamini_hochberg_method
-from performance_metrics import compute_power, compute_fdr, compute_fwer
+from performance_metrics import compute_power, compute_fdr
 import pandas as pd
 
 def run_single_replication(config, rng):
@@ -16,7 +16,7 @@ def run_single_replication(config, rng):
     config : dict
         Configuration dictionary
     rng : np.random.Generator
-        Random number generator
+        Random number generator with fixed seed
     
     Returns:
     --------
@@ -41,10 +41,7 @@ def run_single_replication(config, rng):
         'power_bh': compute_power(rej_bh, true_nulls),
         'fdr_bonf': compute_fdr(rej_bonf, true_nulls),
         'fdr_hoch': compute_fdr(rej_hoch, true_nulls),
-        'fdr_bh': compute_fdr(rej_bh, true_nulls),
-        'fwer_bonf': compute_fwer(rej_bonf, true_nulls),
-        'fwer_hoch': compute_fwer(rej_hoch, true_nulls),
-        'fwer_bh': compute_fwer(rej_bh, true_nulls),
+        'fdr_bh': compute_fdr(rej_bh, true_nulls)
     }
     
     return results
@@ -78,9 +75,6 @@ def run_simulation(config, show_progress=True):
     fdr_bonf = np.zeros(n_reps)
     fdr_hoch = np.zeros(n_reps)
     fdr_bh = np.zeros(n_reps)
-    fwer_bonf = np.zeros(n_reps)
-    fwer_hoch = np.zeros(n_reps)
-    fwer_bh = np.zeros(n_reps)
     
     # Run replications
     iterator = range(n_reps)
@@ -97,9 +91,6 @@ def run_simulation(config, show_progress=True):
         fdr_bonf[rep] = rep_results['fdr_bonf']
         fdr_hoch[rep] = rep_results['fdr_hoch']
         fdr_bh[rep] = rep_results['fdr_bh']
-        fwer_bonf[rep] = rep_results['fwer_bonf']
-        fwer_hoch[rep] = rep_results['fwer_hoch']
-        fwer_bh[rep] = rep_results['fwer_bh']
     
     # Return as dictionary
     results = {
@@ -109,10 +100,7 @@ def run_simulation(config, show_progress=True):
         'power_bh': power_bh,
         'fdr_bonf': fdr_bonf,
         'fdr_hoch': fdr_hoch,
-        'fdr_bh': fdr_bh,
-        'fwer_bonf': fwer_bonf,
-        'fwer_hoch': fwer_hoch,
-        'fwer_bh': fwer_bh
+        'fdr_bh': fdr_bh
     }
     
     return results
@@ -139,21 +127,11 @@ def get_summary_statistics(results):
             np.nanmean(results['power_hoch']),
             np.nanmean(results['power_bh'])
         ],
-        'SE_Power': [
-            np.nanstd(results['power_bonf']) / np.sqrt(len(results['power_bonf'])),
-            np.nanstd(results['power_hoch']) / np.sqrt(len(results['power_hoch'])),
-            np.nanstd(results['power_bh']) / np.sqrt(len(results['power_bh']))
-        ],
         'Mean_FDR': [
             np.mean(results['fdr_bonf']),
             np.mean(results['fdr_hoch']),
             np.mean(results['fdr_bh'])
         ],
-        'Mean_FWER': [
-            np.mean(results['fwer_bonf']),
-            np.mean(results['fwer_hoch']),
-            np.mean(results['fwer_bh'])
-        ]
     }
     
     return pd.DataFrame(data)

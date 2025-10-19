@@ -1,21 +1,21 @@
 import numpy as np
 from scipy import stats
 
-def compute_pvalues(data):
+def compute_pvalues(test_statistic):
     """
     Compute two-sided p-values for z-tests.
     
     Parameters:
     -----------
-    data : np.ndarray
-        Observed data
+    test_statistic : np.ndarray
+        Test statistics for the hypotheses
     
     Returns:
     --------
     pvalues : np.ndarray
         Two-sided p-values
     """
-    pvalues = 2 * (1 - stats.norm.cdf(np.abs(data)))
+    pvalues = 2 * (1 - stats.norm.cdf(np.abs(test_statistic)))
     return pvalues
 
 
@@ -65,15 +65,15 @@ def hochberg_method(pvalues, alpha=0.05):
     
     # Find largest i where P_(i) <= alpha/(m+1-i)
     k = 0
-    for i in range(m-1, -1, -1):
-        if sorted_pvalues[i] <= alpha / (m + 1 - (i+1)):
-            k = i + 1
+    for i in range(m, 0, -1):
+        if sorted_pvalues[i-1] <= alpha / (m + 1 - i):
+            k = i
             break
     
     # Reject all hypotheses up to k
     rejections = np.zeros(m, dtype=bool)
     if k > 0:
-        rejections[sorted_indices[:k]] = True
+        rejections[sorted_indices[:k+1]] = True
     
     return rejections
 
@@ -102,14 +102,14 @@ def benjamini_hochberg_method(pvalues, q=0.05):
     
     # Find largest i where P_(i) <= (i/m)*q
     k = 0
-    for i in range(m-1, -1, -1):
-        if sorted_pvalues[i] <= ((i+1) / m) * q:
-            k = i + 1
+    for i in range(m, 0, -1):
+        if sorted_pvalues[i-1] <= (i / m) * q:
+            k = i
             break
     
     # Reject all hypotheses up to k
     rejections = np.zeros(m, dtype=bool)
     if k > 0:
-        rejections[sorted_indices[:k]] = True
+        rejections[sorted_indices[:k+1]] = True
     
     return rejections

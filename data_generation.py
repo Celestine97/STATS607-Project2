@@ -3,12 +3,12 @@ import numpy as np
 
 def generate_alternative_means(m1, L, distribution):
     """
-    Generate means for false null hypotheses.
+    Generate means for alternative hypotheses.
     
     Parameters:
     -----------
     m1 : int
-        Number of false null hypotheses
+        Number of alternative hypotheses
     L : float
         Signal strength parameter
     distribution : str
@@ -17,7 +17,7 @@ def generate_alternative_means(m1, L, distribution):
     Returns:
     --------
     means : np.ndarray
-        Array of means for false nulls
+        Array of means for alternative hypotheses
     """
     if m1 == 0:
         return np.array([])
@@ -25,22 +25,22 @@ def generate_alternative_means(m1, L, distribution):
     # Four signal levels
     levels = np.array([L/4, L/2, 3*L/4, L])
     
-    if distribution == 'D':  # Decreasing
+    if distribution == 'D':  # Linearly decreasing
         weights = np.array([4, 3, 2, 1])
         counts = np.round(weights / weights.sum() * m1).astype(int)
         
-    elif distribution == 'E':  # Equal
-        counts = np.repeat(m1 // 4, 4)
-        counts[:m1 % 4] += 1
+    elif distribution == 'E':  # Equally distributed
+        weights = np.array([1, 1, 1, 1])
+        counts = np.round(weights / weights.sum() * m1).astype(int)
         
-    elif distribution == 'I':  # Increasing
+    elif distribution == 'I':  # Linearl increasing
         weights = np.array([1, 2, 3, 4])
         counts = np.round(weights / weights.sum() * m1).astype(int)
     
     # Adjust to ensure exact sum
     diff = m1 - counts.sum()
     if diff != 0:
-        counts[-1] += diff
+        counts[-1] += diff # add to the last level
     
     # Create means array
     means = []
