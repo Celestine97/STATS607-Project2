@@ -110,6 +110,6 @@ def benjamini_hochberg_method(pvalues, q=0.05):
     # Reject all hypotheses up to k
     rejections = np.zeros(m, dtype=bool)
     if k > 0:
-        rejections[sorted_indices[:k+1]] = True
+        rejections[sorted_indices[:k]] = True
     
     return rejections

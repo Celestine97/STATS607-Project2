@@ -1,7 +1,7 @@
 import numpy as np
 from config import create_config
 from simulation import run_simulation, get_summary_statistics
-from visualization import plot_figure1_reproduction, plot_power_heatmap, plot_fdr_control_diagnostic, plot_power_distribution_boxplots, plot_method_comparison_summary
+from visualization import plot_figure1_reproduction, plot_power_heatmap, plot_fdr_control_diagnostic
 
 if __name__ == "__main__":
     
