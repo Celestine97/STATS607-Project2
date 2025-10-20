@@ -1,4 +1,4 @@
-def create_config(m, m0, distribution, L=5.0, alpha=0.05, n_reps=20000, seed=12345):
+def create_config(m, m0, distribution, L=5.0, alpha=0.05, n_reps=20000, seed=123456789):
     """
     Create configuration dictionary for simulation.
     
@@ -9,15 +9,16 @@ def create_config(m, m0, distribution, L=5.0, alpha=0.05, n_reps=20000, seed=123
     m0 : int
         Number of true nulls
     distribution : str
+        Distribution type for alternative means:
         'D' (Decreasing), 'E' (Equal), 'I' (Increasing)
     L : float
-        Signal strength parameter
+        Signal strength parameter for alternative hypotheses
     alpha : float
-        Significance level
+        Significance level (same as the FDR level, as the paper suggested)
     n_reps : int
         Number of simulation replications
     seed : int
-        Random seed
+        Random seed for reproducibility
     
     Returns:
     --------
@@ -25,7 +26,6 @@ def create_config(m, m0, distribution, L=5.0, alpha=0.05, n_reps=20000, seed=123
         Configuration dictionary
     """
     m1 = m - m0
-    assert m0 + m1 == m, "m0 + m1 must equal m"
     assert distribution in ['D', 'E', 'I'], "distribution must be D, E, or I"
     
     config = {

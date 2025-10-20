@@ -1,44 +1,88 @@
+# run_analysis.py
+# run simulations and generate visualizations
+
 import numpy as np
 from config import create_config
-from simulation import run_simulation, get_summary_statistics
-from visualization import plot_figure1_reproduction, plot_power_heatmap, plot_fdr_control_diagnostic
+from data_generation import generate_base_data
+from simulation import run_simulation_with_base_data
+from visualization import (
+    plot_figure1_reproduction, 
+    plot_power_heatmap, 
+    plot_fdr_control_diagnostic,
+)
 
 if __name__ == "__main__":
-    
 
-    # Store all results for later comparison
     all_results = {}
 
-    # parameters for the simulations
+    # Parameters
     m_values = [4, 8, 16, 32, 64]
-    null_proportions = [0.75, 0.50, 0.25, 0]
+    null_proportions = [0.75, 0.50, 0.25, 0.0]
     distributions = ['D', 'E', 'I']
+    n_reps = 20000
+    base_seed = 123456789
+    L_setting = 5
+    alpha_setting = 0.05
 
-    # Run simulations with different parameters
+    data_output_dir = 'generated_data/'
+    figure_output_dir = 'figures/'
+
+    # For each m, generate base data once
+    base_data_cache = {}
     for m in m_values:
-        for m0_proportion in null_proportions:
-            for distribution in distributions:
-                m0 = int(m * m0_proportion)
-                
-                # Create configuration
-                config = create_config(m=m, m0=m0, distribution=distribution, L=5.0, n_reps=1000, seed=12345)
-                
-                # Run simulation
-                results = run_simulation(config, show_progress=True)
-                
-                # Store with descriptive key
-                key = (m, m0, distribution)  # (total, nulls, distribution)
-                all_results[key] = results
-                
-                print(f"m={m}, m0={m0}, dist={distribution}: Power = {np.mean(results['power_bh']):.3f}, FDR = {np.mean(results['fdr_bh']):.3f}")
+        config = create_config(
+            m=m, m0=0, distribution='E',
+            L=L_setting,
+            alpha=alpha_setting,
+            n_reps=n_reps,
+            seed= base_seed + m  # Different seed per m to ensure different data
+        )
+        print(f"\n Generating base data for m={m} ({n_reps} replications)...")
+        base_data_cache[m] = generate_base_data(config)
 
-    # plot_figure1_reproduction(all_results,distributions, null_proportions, m_values)
-    # plot_power_heatmap(all_results,distributions, null_proportions, m_values)
-    plot_fdr_control_diagnostic(all_results)
-
-    # access specific results
-    results_32_16 = all_results[(32, 16, 'E')]
-    print(f"\nResults for m=32, m0=16:")
-    print(get_summary_statistics(results_32_16))
+    total = len(m_values) * len(null_proportions) * len(distributions)
+    sim_count = 0
     
-    print("\n✓ Simulation complete!")
+    for m in m_values:
+        # Get the pre-generated base data for this m
+        base_data = base_data_cache[m]
+        
+        for null_prop in null_proportions:
+            for dist in distributions:
+                sim_count += 1
+                m0 = int(m * null_prop)
+                
+                print(f"[{sim_count}/{total}] m={m}, {null_prop*100:.0f}% null, {dist}")
+                
+                # Create configuration for this setting
+                config = create_config(
+                    m=m, m0=m0, distribution=dist,
+                    L=L_setting,
+                    alpha=alpha_setting,
+                    n_reps=n_reps,
+                    seed=base_seed + m  # Same seed for same m
+                )
+                
+                # Run simulation with base data
+                # variance reduction
+                results = run_simulation_with_base_data(
+                    config, 
+                    base_data,
+                    show_progress=False
+                    save_results=True
+                )
+                
+                # Store results
+                key = (m, m0, dist)
+                all_results[key] = results
+    
+    print("\n" + "="*80)
+    print("Simulations complete.")
+    print("="*80 + "\n")
+    
+    # Generate visualizations
+    plot_figure1_reproduction(all_results,distributions, null_proportions, m_values)
+    plot_power_heatmap(all_results,distributions, null_proportions, m_values)
+    plot_fdr_control_diagnostic(all_results,distributions, null_proportions, m_values)
+    
+    print("All complete.")

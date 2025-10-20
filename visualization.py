@@ -45,20 +45,6 @@ def plot_figure1_reproduction(all_results,
         Which m values to include (subset of [4, 8, 16, 32, 64])
     save_path : str
         Path to save the figure
-    
-    Examples:
-    ---------
-    # Full figure (like the paper)
-    plot_figure1_reproduction(all_results)
-    
-    # Only Equal distribution, 50% and 25% null
-    plot_figure1_reproduction(all_results, 
-                             distributions=['E'],
-                             null_proportions=[0.50, 0.25])
-    
-    # All distributions but only m=16,32,64
-    plot_figure1_reproduction(all_results,
-                             m_values=[16, 32, 64])
     """
     import matplotlib.pyplot as plt
     import numpy as np
@@ -94,49 +80,30 @@ def plot_figure1_reproduction(all_results,
                 
                 if key in all_results:
                     result = all_results[key]
-                    
-                    # Mean power
+
                     powers_bonf.append(np.nanmean(result['power_bonf']))
                     powers_hoch.append(np.nanmean(result['power_hoch']))
                     powers_bh.append(np.nanmean(result['power_bh']))
-                    
-                    # Standard errors
-                    n = len(result['power_bonf'])
-                    ses_bonf.append(np.nanstd(result['power_bonf']) / np.sqrt(n))
-                    ses_hoch.append(np.nanstd(result['power_hoch']) / np.sqrt(n))
-                    ses_bh.append(np.nanstd(result['power_bh']) / np.sqrt(n))
                 else:
                     # Missing data - use NaN
                     powers_bonf.append(np.nan)
                     powers_hoch.append(np.nan)
                     powers_bh.append(np.nan)
-                    ses_bonf.append(0)
-                    ses_hoch.append(0)
-                    ses_bh.append(0)
             
             # Convert to arrays
             powers_bonf = np.array(powers_bonf)
             powers_hoch = np.array(powers_hoch)
             powers_bh = np.array(powers_bh)
-            ses_bonf = np.array(ses_bonf)
-            ses_hoch = np.array(ses_hoch)
-            ses_bh = np.array(ses_bh)
             
             # Plot with equal spacing on x-axis
             ax.plot(positions, powers_bonf, 'o:', label='Bonferroni', 
-                   color='#1f77b4', linewidth=2, markersize=5, alpha=0.8)
-            ax.fill_between(positions, powers_bonf - 1.96*ses_bonf, 
-                          powers_bonf + 1.96*ses_bonf, alpha=0.15, color='#1f77b4')
+                   color = 'steelblue', linewidth=2, markersize=5, alpha=0.8)
             
             ax.plot(positions, powers_hoch, 's--', label='Hochberg', 
-                   color='#ff7f0e', linewidth=2, markersize=5, alpha=0.8)
-            ax.fill_between(positions, powers_hoch - 1.96*ses_hoch, 
-                          powers_hoch + 1.96*ses_hoch, alpha=0.15, color='#ff7f0e')
+                   color='darkorange', linewidth=2, markersize=5, alpha=0.8)
             
             ax.plot(positions, powers_bh, '^-', label='BH', 
-                   color='#2ca02c', linewidth=2.5, markersize=6, alpha=0.9)
-            ax.fill_between(positions, powers_bh - 1.96*ses_bh, 
-                          powers_bh + 1.96*ses_bh, alpha=0.2, color='#2ca02c')
+                   color='turquoise', linewidth=2.5, markersize=6, alpha=0.9)
             
             # Set x-ticks with equal spacing
             ax.set_xticks(positions)
@@ -179,7 +146,7 @@ def plot_figure1_reproduction(all_results,
     
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='white')
-        print(f"✓ Figure saved to {save_path}")
+        print(f"Figure saved to {save_path}")
     
     plt.show()
 
@@ -254,30 +221,33 @@ def plot_power_heatmap(all_results,
     cbar.set_label('Power Gain (BH - Bonferroni)', rotation=270, 
                    labelpad=20, fontweight='bold')
     
-    plt.suptitle('BH Power Advantage Over Bonferroni Across All Conditions', 
+    plt.suptitle('BH Power Advantage Over Bonferroni', 
                 fontsize=14, fontweight='bold', y=0.98)
     
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='white')
-        print(f"✓ Figure saved to {save_path}")
+        print(f"Figure saved to {save_path}")
     
     plt.show()
 
 
 
-def plot_fdr_control_diagnostic(all_results, save_path='fdr_diagnostic.png'):
+def plot_fdr_control_diagnostic(all_results, 
+                             distributions,
+                             null_proportions,
+                             m_values,
+                             save_path='figures/fdr_diagnostic.png'):
     """
     DIAGNOSTIC FIGURE: Verify that BH controls FDR at the nominal level.
     
     Shows empirical FDR for all methods across conditions.
     """
-    fig = plt.figure(figsize=(14, 10))
-    gs = GridSpec(3, 3, figure=fig, hspace=0.3, wspace=0.3)
+    n_rows = len(null_proportions) 
+    n_cols = len(distributions)
+    fig = plt.figure(figsize=(5 * n_cols, 3.5 * n_rows))
+    gs = GridSpec(n_rows, n_cols, figure=fig, hspace=0.3, wspace=0.3)
     
-    distributions = ['D', 'E', 'I']
     dist_names = {'D': 'Decreasing', 'E': 'Equal', 'I': 'Increasing'}
-    m_values = [4, 8, 16, 32, 64]
-    null_proportions = [0.75, 0.50, 0.25]
     
     for col_idx, dist in enumerate(distributions):
         for row_idx, null_prop in enumerate(null_proportions):
@@ -303,22 +273,25 @@ def plot_fdr_control_diagnostic(all_results, save_path='fdr_diagnostic.png'):
                     fdrs_bh.append(np.nan)
             
             # Plot
-            ax.plot(m_values, fdrs_bonf, 'o:', label='Bonferroni', 
-                   color='#1f77b4', linewidth=2, markersize=6)
-            ax.plot(m_values, fdrs_hoch, 's--', label='Hochberg', 
-                   color='#ff7f0e', linewidth=2, markersize=6)
-            ax.plot(m_values, fdrs_bh, '^-', label='BH', 
-                   color='#2ca02c', linewidth=2, markersize=7)
+            positions = np.arange(len(m_values))
+
+            ax.plot(positions, fdrs_bonf, 'o:', label='Bonferroni', 
+                   color='steelblue', linewidth=2, markersize=6)
+            ax.plot(positions, fdrs_hoch, 's--', label='Hochberg', 
+                   color='darkorange', linewidth=2, markersize=6)
+            ax.plot(positions, fdrs_bh, '^-', label='BH', 
+                   color='turquoise', linewidth=2, markersize=7)
             
-            # Nominal level line
+            # Target level line
             ax.axhline(y=0.05, color='red', linestyle='--', 
-                      linewidth=2, alpha=0.7, label='Nominal (α=0.05)')
+                      linewidth=2, alpha=0.7, label='Target Level (α=0.05)')
             
             # Formatting
             ax.set_xlabel('Number of Hypotheses (m)')
             ax.set_ylabel('Empirical FDR')
-            ax.set_xticks(m_values)
-            ax.set_ylim([0, 0.08])
+            ax.set_xticks(positions)
+            ax.set_xticklabels(m_values)
+            ax.set_ylim([0, 0.15])
             ax.grid(True, alpha=0.3)
             
             # Title
@@ -335,11 +308,11 @@ def plot_fdr_control_diagnostic(all_results, save_path='fdr_diagnostic.png'):
             if row_idx == 0 and col_idx == 2:
                 ax.legend(loc='upper left', fontsize=8, framealpha=0.95)
     
-    plt.suptitle('FDR Control Verification: All Methods Stay Below Nominal Level', 
+    plt.suptitle('FDR Control Verification', 
                 fontsize=14, fontweight='bold')
     
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='white')
-        print(f"✓ Figure saved to {save_path}")
+        print(f"Figure saved to {save_path}")
     
     plt.show()

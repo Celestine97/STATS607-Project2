@@ -4,14 +4,14 @@ import sys
 from scipy import stats
 
 from config import create_config
-from data_generation import generate_data
+from data_generation import generate_base_data
 
 from simulation import (
     bonferroni_method,
     benjamini_hochberg_method,
     compute_power,
     compute_fdr,
-    run_simulation
+    run_simulation_with_base_data
 )
 
 class TestDataGenerationProcess:
@@ -28,7 +28,7 @@ class TestDataGenerationProcess:
         vars_observed = []
         
         for _ in range(100):
-            data, true_nulls = generate_data(config, rng)
+            data = generate_base_data(config)
             means_observed.append(np.mean(data))
             vars_observed.append(np.var(data, ddof=1))
         
@@ -135,13 +135,13 @@ class TestReproducibility:
         """
         
         config = create_config(m=16, m0=8, distribution='E', n_reps=100, seed=12345)
-        
+        base_data = generate_base_data(config)
         
         # Run 1
-        results1 = run_simulation(config, show_progress=False)
+        results1 = run_simulation_with_base_data(config, base_data, show_progress=False)
         
         # Run 2 (same config, same seed)
-        results2 = run_simulation(config, show_progress=False)
+        results2 = run_simulation_with_base_data(config, base_data, show_progress=False)
         
         # Compare
         all_identical = True
