@@ -10,7 +10,7 @@ all:
 	@echo "  - simulation_summary/*.csv"
 	python run_simulations.py
 	python run_analysis.py
-	python run_visualizations.py
+	python run_visualization.py
 
 # Install required packages
 install:
@@ -43,14 +43,14 @@ visualizations:
 	@echo " "
 	@echo "Generating figures..."
 	@echo " "
-	python run_visualizations.py
+	python run_visualization.py
 	@echo "Figures generated"
 
 
 # Clean generated files
 clean:
 	@echo "Cleaning generated files..."
-	rm -rf results/*.pkl
+	rm -rf generated_data/*.pkl
 	rm -rf figures/*.png
 	rm -rf simulation_summary/*.csv
 	@echo "✓ Clean complete"

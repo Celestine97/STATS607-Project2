@@ -57,12 +57,11 @@ if __name__ == "__main__":
                 
                 # Run simulation with base data
                 # variance reduction
-                results = run_simulation_with_base_data(
-                    config, 
+                results = run_simulation_with_base_data(config, 
                     base_data,
-                    show_progress=False
+                    show_progress=False,
                     save_results=True
-                )
+                    )
                 
                 # Store results
                 key = (m, m0, dist)
